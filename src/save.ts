@@ -2,9 +2,12 @@ import * as core from "@actions/core";
 import * as cache from "@actions/cache";
 import * as exec from "@actions/exec";
 
+import * as util from "./util"
+
 async function run() : Promise<void> {
   try{
-    core.info("Ccache stats:")
+    const ccache = await util.which("ccache");
+    core.info("Ccache stats:");
     let verbosity = '';
     const inputVerbose = core.getInput("verbose");
     switch (inputVerbose) {
@@ -22,7 +25,8 @@ async function run() : Promise<void> {
         default:
             core.warning(`Invalid value "${inputVerbose}" of "verbose" option ignored.`);
     }
-    await exec.exec(`ccache -s${verbosity}`);
+
+    await exec.exec(ccache!, [`-s${verbosity}`]);
 
     let restoreKey = `ccache-`;
     let inputKey = core.getInput("key");
@@ -34,9 +38,9 @@ async function run() : Promise<void> {
     const key = restoreKey + new Date().toISOString();
     const paths = [
       '.ccache'
-    ]
+    ];
   
-    core.info(`Save cache using key "${key}".`)
+    core.info(`Save cache using key "${key}".`);
     await cache.saveCache(paths, key);
   } catch (error) {
     core.setFailed(`Saving cache failed: ${error}`);
